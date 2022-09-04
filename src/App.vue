@@ -67,40 +67,38 @@ const result = ref([]);
 const redata = ref(null);
 
 const launchOneDrivePicker = (action = "query") => {
-    if (action == "query") {
-        msg.value = "正在等待API返回数据";
-        Alert("正在等待API返回数据");
-        let odOptions = {
-            clientId: "5712d2c8-2c32-4f4f-a5aa-fdc966092171",
-            action: action, //share | download | query
-            multiSelect: true,
-            openInNewWindow: true,
-            //advanced: {createLinkParameters: { type: "embed", scope: "anonymous" }},
-            advanced: {
-                queryParameters:
-                    "select=audio,content,createdBy,createdDateTime,cTag,deleted,description,eTag,file,fileSystemInfo,folder,id,image,lastModifiedBy,lastModifiedDateTime,location,malware,name,package,parentReference,photo,publication,remoteItem,root,searchResult,shared,sharepointIds,size,specialFolder,video,webDavUrl,webUrl,activities,children,listItem,permissions,thumbnails,versions,@microsoft.graph.conflictBehavior,@microsoft.graph.downloadUrl,@microsoft.graph.sourceUrl"
-            },
-            success: function(files) {
-                redata.value = files; //存入全局数组
-                console.log(
-                    "本次返回 %d 个文件，数据为 %o",
-                    redata.value.value.length,
-                    redata.value
-                );
-                generate_output(redata.value);
-            },
-            cancel: () => {
-                msg.value = "取消操作";
-                Alert("取消操作");
-            },
-            error: function(e) {
-                msg.value = "发生错误";
-                Alert("发生错误");
-                result.value = e.toString();
-            }
-        };
-        OneDrive.open(odOptions);
-    }
+    msg.value = "正在等待API返回数据";
+    Alert("正在等待API返回数据");
+    let odOptions = {
+        clientId: "5712d2c8-2c32-4f4f-a5aa-fdc966092171",
+        action: action, //share | download | query
+        multiSelect: true,
+        openInNewWindow: true,
+        //advanced: {createLinkParameters: { type: "embed", scope: "anonymous" }},
+        advanced: {
+            queryParameters:
+                "select=audio,content,createdBy,createdDateTime,cTag,deleted,description,eTag,file,fileSystemInfo,folder,id,image,lastModifiedBy,lastModifiedDateTime,location,malware,name,package,parentReference,photo,publication,remoteItem,root,searchResult,shared,sharepointIds,size,specialFolder,video,webDavUrl,webUrl,activities,children,listItem,permissions,thumbnails,versions,@microsoft.graph.conflictBehavior,@microsoft.graph.downloadUrl,@microsoft.graph.sourceUrl"
+        },
+        success: function(files) {
+            redata.value = files; //存入全局数组
+            console.log(
+                "本次返回 %d 个文件，数据为 %o",
+                redata.value.value.length,
+                redata.value
+            );
+            generate_output(redata.value);
+        },
+        cancel: () => {
+            msg.value = "取消操作";
+            Alert("取消操作");
+        },
+        error: function(e) {
+            msg.value = "发生错误";
+            Alert("发生错误");
+            result.value = e.toString();
+        }
+    };
+    OneDrive.open(odOptions);
 };
 
 const generate_output = files => {
