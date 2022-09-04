@@ -29,7 +29,10 @@
                 <Icon icon="Microsoft" size="24" color="#488ded" />输出面板
             </h3>
             <div class="tip">{{msg}}</div>
-            <div class="mask">{{result}}</div>
+            <ul class="mask">
+                <li v-for="(item,index) in result" :key="index" @click="copylink(item)">{{item}}</li>
+            </ul>
+            <button @click="copylink(result)" v-if="result.length">全部复制</button>
             <div class="copyright">
                 Copyright © 2017
                 <a
@@ -60,12 +63,13 @@ import Icon from "./components/Icon.vue";
 
 const selectIndex = ref(0);
 const msg = ref("点击按钮从OneDrive选择文件");
-const result = ref("文件的url直链在此显示");
+const result = ref([]);
 const redata = ref(null);
 
 const launchOneDrivePicker = (action = "query") => {
     if (action == "query") {
         msg.value = "正在等待API返回数据";
+        Alert("正在等待API返回数据");
         let odOptions = {
             clientId: "5712d2c8-2c32-4f4f-a5aa-fdc966092171",
             action: action, //share | download | query
@@ -87,9 +91,11 @@ const launchOneDrivePicker = (action = "query") => {
             },
             cancel: () => {
                 msg.value = "取消操作";
+                Alert("取消操作");
             },
             error: function(e) {
                 msg.value = "发生错误";
+                Alert("发生错误");
                 result.value = e.toString();
             }
         };
@@ -102,6 +108,7 @@ const generate_output = files => {
     let filearr = files.value;
 
     msg.value = "共选择 " + filearr.length + " 个文件。";
+    Alert("共选择 " + filearr.length + " 个文件。");
     if (
         filearr.some(function(item) {
             return item.shared == undefined || item.shared.scope != "anonymous";
@@ -114,7 +121,7 @@ const generate_output = files => {
         let outStr = showMask(mask.cfg, item, index);
         return outStr;
     });
-    result.value = outStrArr.join("\n");
+    result.value = outStrArr;
 };
 
 //显示掩码用
@@ -141,6 +148,7 @@ const showMask = (str, file, index) => {
                 else newTxt = newTxt.replace(mskO, "");
             } catch (e) {
                 msg.value = "掩码异常，详情查看控制台";
+                Alert("掩码异常，详情查看控制台");
                 console.error(mskO + " 掩码出现了异常情况", e);
             }
         }
@@ -207,6 +215,27 @@ const maskCfg = [
     }
 ];
 
+const copylink = item => {
+    let contents = "";
+    let copyInput;
+    if (typeof item == "string") {
+        copyInput = document.createElement("input");
+        document.body.appendChild(copyInput);
+        copyInput.setAttribute("value", item);
+    } else {
+        for (var i = 0; i < item.length; i++) {
+            contents += item[i] + "\n";
+        }
+        copyInput = document.createElement("textarea");
+        document.body.appendChild(copyInput);
+        copyInput.value = contents;
+    }
+    copyInput.select();
+    document.execCommand("copy");
+    Alert("链接已复制到剪贴板！");
+    copyInput.remove();
+};
+
 onMounted(() => {
     if (
         location.protocol != "https:" &&
@@ -221,4 +250,29 @@ onMounted(() => {
         }
     }
 });
+
+const Alert = info => {
+    if (!$("#SpectreAlert").length > 0)
+        $(
+            `<div id="SpectreAlert"><style>#SpectreAlert {position: fixed;z-index: 99999;top: 20px;right: 20px}#SpectreAlert>div {width: 350px !important;height: auto;display: none;padding: 10px 30px;background: rgba(255, 255, 255, .7);backdrop-filter: blur(5px);border: 1px solid #ddd;border-radius: 4px;box-shadow: 0 0 5px #ccc;margin-bottom: 12px;text-align: center;color: #555;position: relative;font-size: 13px;cursor: pointer;white-space: normal !important;text-overflow: clip !important;overflow: visible !important;animation: SMP_Show .8s;}@keyframes SMP_Show {0% {opacity: 0;transform: scale(.8) translateX(100%);}80%{transform: scale(.95) translateX(0%);}100% {opacity: 1;transform: scale(1) translateX(0%);}}.SpectreAlertClose {position: absolute;top: 50%;transform: translateY(-50%);right: 10px;padding: 10px 2px;transition: .3s}.SpectreAlertClose:hover {background: #eee;border-radius: 3px;}.SpectreAlertClose:active {background: #ddd;}.SpectreAlertClose::before,.SpectreAlertClose::after {content: '';width: 14px;height: 1px;background: gray;display: block}.SpectreAlertClose::before {transform: rotate(45deg)}.SpectreAlertClose::after {transform: translateY(-1px) rotate(-45deg)}</style></div>`
+        ).appendTo(document.body);
+    let time = new Date().toLocaleTimeString();
+
+    $(`<div>[${time}] ${info}<span class="SpectreAlertClose"></span></div>`)
+        .prependTo("#SpectreAlert")
+        .fadeToggle("slow", function() {
+            $(".SpectreAlertClose").click(function() {
+                $(this)
+                    .parent()
+                    .fadeToggle("fast", function() {
+                        $(this).remove();
+                    });
+            });
+            setTimeout(() => {
+                $(this).fadeToggle("slow", function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        });
+};
 </script>
